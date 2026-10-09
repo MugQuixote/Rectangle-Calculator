@@ -3,26 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rectangle Calculator</title>
+    <meta name="theme-color" content="#111311">
+    <title>The Silent Stacks — Geometry Registry</title>
     <style>
         :root {
-            color-scheme: light;
-            --page-bg: #f1f3f8;
-            --surface: #ffffff;
-            --panel-bg: #f1f3f8;
-            --text: #202536;
-            --muted: #687084;
-            --border: #cbd0dc;
+            color-scheme: dark;
+            --canvas: #111311;
+            --panel: #191b18;
+            --panel-raised: #20221e;
+            --panel-soft: #171916;
+            --ink: #ece7d9;
+            --ink-muted: #a29d8e;
+            --ink-faint: #716f64;
+            --line: #37382f;
+            --line-bright: #575343;
+            --gold: #d7bd79;
+            --gold-bright: #ecd69a;
+            --gold-wash: rgba(215, 189, 121, .1);
+            --red: #bf6c60;
+            --green: #a7b89a;
+            --serif: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+            --sans: "Segoe UI", Arial, sans-serif;
         }
 
-        body[data-theme="dark"] {
-            color-scheme: dark;
-            --page-bg: #171a24;
-            --surface: #242837;
-            --panel-bg: #1d2230;
-            --text: #edf0fa;
-            --muted: #a4abc0;
-            --border: #454c60;
+        body[data-theme="light"] {
+            color-scheme: light;
+            --canvas: #e9e5da;
+            --panel: #f5f1e7;
+            --panel-raised: #ece7db;
+            --panel-soft: #eee9de;
+            --ink: #24251f;
+            --ink-muted: #656256;
+            --ink-faint: #898574;
+            --line: #d2cbbb;
+            --line-bright: #b8ae98;
+            --gold: #876d37;
+            --gold-bright: #6e5727;
+            --gold-wash: rgba(135, 109, 55, .1);
+            --red: #9b4e44;
+            --green: #536b48;
         }
 
         * {
@@ -30,270 +49,877 @@
         }
 
         body {
+            min-width: 320px;
             min-height: 100vh;
             margin: 0;
+            background:
+                radial-gradient(ellipse at 71% 40%, rgba(181, 151, 89, .055), transparent 37%),
+                var(--canvas);
+            color: var(--ink);
+            font-family: var(--sans);
+            transition: background-color .2s ease, color .2s ease;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 3px;
+        }
+
+        .layout {
             display: grid;
-            place-items: center;
-            padding: 24px;
-            background: var(--page-bg);
-            color: var(--text);
-            font-family: Arial, sans-serif;
-            transition: background .2s ease, color .2s ease;
+            grid-template-columns: 74px minmax(0, 1fr);
+            min-height: 100vh;
         }
 
-        .calculator {
-            width: min(100%, 760px);
-            padding: 30px;
-            border-radius: 16px;
-            background: var(--surface);
-            box-shadow: 0 12px 36px rgba(32, 37, 54, .1);
-            transition: background .2s ease;
-        }
-
-        .heading {
+        .rail {
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 27px;
+            padding: 24px 0;
+            border-right: 1px solid var(--line);
+            background: var(--panel-soft);
+        }
+
+        .seal {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-family: var(--serif);
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .rail-rule {
+            width: 20px;
+            height: 1px;
+            background: var(--line-bright);
+        }
+
+        .rail-mark {
+            color: var(--ink-faint);
+            font-family: var(--serif);
+            font-size: 12px;
+            letter-spacing: .16em;
+            writing-mode: vertical-rl;
+        }
+
+        .rail-spacer {
+            flex: 1;
+        }
+
+        .rail-volume {
+            color: var(--gold);
+            font-size: 10px;
+            letter-spacing: .15em;
+            writing-mode: vertical-rl;
+        }
+
+        .workspace {
+            width: min(100%, 1160px);
+            margin: 0 auto;
+            padding: 34px clamp(22px, 6vw, 78px) 48px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: flex-start;
             gap: 16px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .breadcrumb,
+        .theme-toggle,
+        .eyebrow,
+        .section-kicker,
+        .field-label,
+        .record-label,
+        .folio {
+            font-size: 10px;
+            font-weight: 650;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        .breadcrumb {
+            color: var(--ink-muted);
+        }
+
+        .breadcrumb span {
+            padding: 0 9px;
+            color: var(--gold);
         }
 
         .theme-toggle {
-            flex: 0 0 auto;
-            width: auto;
-            margin: 0;
             padding: 9px 12px;
-            border: 1px solid var(--border);
-            background: var(--panel-bg);
-            color: var(--text);
-            font-size: 13px;
+            border: 1px solid var(--line-bright);
+            background: transparent;
+            color: var(--ink-muted);
+            cursor: pointer;
+            transition: border-color .2s ease, color .2s ease;
         }
 
         .theme-toggle:hover {
-            background: var(--border);
+            border-color: var(--gold);
+            color: var(--gold-bright);
         }
 
-        .calculator-content {
+        .intro {
             display: grid;
-            grid-template-columns: minmax(220px, .9fr) minmax(260px, 1.1fr);
-            gap: 28px;
-            align-items: center;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: end;
+            gap: 24px;
+            padding: 42px 0 27px;
+        }
+
+        .eyebrow {
+            margin: 0 0 12px;
+            color: var(--gold);
+        }
+
+        h1,
+        h2,
+        p {
+            margin-top: 0;
         }
 
         h1 {
-            margin: 0 0 8px;
-            font-size: 26px;
+            margin-bottom: 10px;
+            font-family: var(--serif);
+            font-size: clamp(34px, 5vw, 54px);
+            font-weight: 400;
+            letter-spacing: -.035em;
+            line-height: 1.08;
         }
 
-        .description {
-            margin: 0 0 24px;
-            color: var(--muted);
+        .subtitle {
+            max-width: 520px;
+            margin-bottom: 0;
+            color: var(--ink-muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .folio {
+            padding-bottom: 5px;
+            color: var(--ink-faint);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .folio strong {
+            display: block;
+            margin-top: 7px;
+            color: var(--gold);
+            font-family: var(--serif);
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: .04em;
+        }
+
+        .calculator {
+            overflow: hidden;
+            border: 1px solid var(--line-bright);
+            background: var(--panel);
+            box-shadow: 0 20px 70px rgba(0, 0, 0, .17);
+        }
+
+        .card-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 17px 24px;
+            border-bottom: 1px solid var(--line);
+            background: var(--panel-soft);
+        }
+
+        .section-kicker {
+            margin: 0;
+            color: var(--ink-muted);
+        }
+
+        .access-stamp {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--green);
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .access-stamp::before {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            content: "";
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, .92fr) minmax(300px, 1.08fr);
+        }
+
+        .entry-panel {
+            padding: 28px 26px 24px;
+            border-right: 1px solid var(--line);
+        }
+
+        .section-title {
+            margin: 0 0 7px;
+            font-family: var(--serif);
+            font-size: 22px;
+            font-weight: 400;
+        }
+
+        .section-description {
+            margin: 0 0 22px;
+            color: var(--ink-muted);
+            font-size: 12px;
+            line-height: 1.65;
+        }
+
+        .unit-field {
+            margin-bottom: 17px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--ink-muted);
+        }
+
+        .unit-select,
+        .dimension-input {
+            width: 100%;
+            min-height: 43px;
+            border: 1px solid var(--line);
+            border-radius: 0;
+            background: var(--panel-soft);
+            color: var(--ink);
+        }
+
+        .unit-select {
+            padding: 0 12px;
+            cursor: pointer;
+        }
+
+        .dimensions-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 13px;
+        }
+
+        .dimension-input {
+            padding: 0 12px;
+            font-size: 16px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dimension-input::placeholder {
+            color: var(--ink-faint);
+            opacity: .85;
+        }
+
+        .quick-examples {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 7px;
+            margin-top: 16px;
+        }
+
+        .example-label {
+            margin-right: 3px;
+            color: var(--ink-faint);
+            font-size: 10px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .example-button {
+            padding: 6px 8px;
+            border: 1px solid var(--line);
+            background: transparent;
+            color: var(--ink-muted);
+            cursor: pointer;
+            font-size: 11px;
+            font-variant-numeric: tabular-nums;
+            transition: border-color .2s ease, color .2s ease;
+        }
+
+        .example-button:hover {
+            border-color: var(--gold);
+            color: var(--gold-bright);
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 9px;
+            margin-top: 23px;
+        }
+
+        .calculate-button,
+        .clear-button {
+            min-height: 44px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+            transition: background .2s ease, color .2s ease, border-color .2s ease;
+        }
+
+        .calculate-button {
+            border: 1px solid var(--gold);
+            background: var(--gold);
+            color: #201e18;
+        }
+
+        .calculate-button:hover {
+            border-color: var(--gold-bright);
+            background: var(--gold-bright);
+        }
+
+        .clear-button {
+            padding: 0 15px;
+            border: 1px solid var(--line-bright);
+            background: transparent;
+            color: var(--ink-muted);
+        }
+
+        .clear-button:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .message {
+            min-height: 17px;
+            margin: 11px 0 0;
+            color: var(--red);
+            font-size: 11px;
             line-height: 1.5;
         }
 
-        label {
-            display: block;
-            margin: 16px 0 7px;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--surface);
-            color: var(--text);
-            font-size: 16px;
-        }
-
-        input:focus {
-            border-color: #5969d9;
-            outline: 3px solid rgba(89, 105, 217, .15);
-        }
-
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 13px;
-            border: 0;
-            border-radius: 8px;
-            background: #5969d9;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        button:hover {
-            background: #4656c3;
-        }
-
-        .results {
-            margin-top: 22px;
-            padding: 16px;
-            border-radius: 8px;
-            background: var(--panel-bg);
-        }
-
-        .results p {
-            margin: 6px 0;
-        }
-
-        .visualization {
+        .preview-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             min-width: 0;
-            padding: 20px 16px 14px;
-            border-radius: 12px;
-            background: var(--panel-bg);
-            text-align: center;
+            padding: 28px 25px 24px;
         }
 
-        .visualization h2 {
-            margin: 0;
-            font-size: 16px;
+        .preview-heading {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
         }
 
-        .visualization p {
-            margin: 6px 0 0;
-            color: var(--muted);
-            font-size: 13px;
+        .preview-heading .section-title {
+            font-size: 19px;
         }
 
-        .rectangle-diagram {
+        .preview-note {
+            color: var(--ink-faint);
+            font-size: 10px;
+        }
+
+        .diagram-frame {
+            display: grid;
+            min-height: 215px;
+            place-items: center;
+            margin: 15px 0 18px;
+            border: 1px solid var(--line);
+            background:
+                linear-gradient(rgba(160, 150, 122, .045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(160, 150, 122, .045) 1px, transparent 1px),
+                var(--panel-soft);
+            background-size: 22px 22px;
+        }
+
+        .diagram {
             display: block;
-            width: 100%;
-            max-width: 360px;
+            width: min(100%, 420px);
             height: auto;
-            margin: 10px auto 0;
+            overflow: visible;
         }
 
-        .rectangle-shape {
-            fill: #dfe3ff;
-            stroke: #5969d9;
-            stroke-width: 3;
-            transition: all .2s ease;
+        .diagram-frame .dimension-line {
+            stroke: var(--ink-faint);
+            stroke-width: 1.4;
         }
 
-        .dimension-line {
-            stroke: #687084;
-            stroke-width: 1.5;
+        .diagram-frame .dimension-tick {
+            stroke: var(--gold);
+            stroke-width: 1.6;
         }
 
-        .dimension-label {
-            fill: var(--text);
-            font: 14px Arial, sans-serif;
-            font-weight: 700;
+        .diagram-frame .dimension-label {
+            fill: var(--gold-bright);
+            font: 12px var(--sans);
+            letter-spacing: .04em;
         }
 
-        #message {
-            min-height: 18px;
-            margin: 12px 0 0;
-            color: #b42318;
-            font-size: 14px;
+        .diagram-frame .rectangle-shape {
+            fill: rgba(215, 189, 121, .12);
+            stroke: var(--gold);
+            stroke-width: 2;
+            transition: all .25s ease;
         }
 
-        @media (max-width: 620px) {
-            .calculator {
-                padding: 24px;
+        .formula-strip {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border: 1px solid var(--line);
+        }
+
+        .formula {
+            min-width: 0;
+            padding: 12px 14px;
+            background: var(--panel-soft);
+        }
+
+        .formula + .formula {
+            border-left: 1px solid var(--line);
+        }
+
+        .formula-name {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--ink-faint);
+            font-size: 9px;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+        }
+
+        .formula-expression {
+            color: var(--gold-bright);
+            font-family: var(--serif);
+            font-size: 16px;
+            white-space: nowrap;
+        }
+
+        .records {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid var(--line-bright);
+            background: var(--panel-soft);
+        }
+
+        .record {
+            min-width: 0;
+            padding: 19px 24px 21px;
+        }
+
+        .record + .record {
+            border-left: 1px solid var(--line);
+        }
+
+        .record-label {
+            display: block;
+            margin-bottom: 9px;
+            color: var(--ink-muted);
+        }
+
+        .record-value {
+            display: block;
+            overflow-wrap: anywhere;
+            color: var(--ink);
+            font-family: var(--serif);
+            font-size: clamp(24px, 3vw, 34px);
+            font-variant-numeric: tabular-nums;
+            line-height: 1.15;
+        }
+
+        .record-unit {
+            color: var(--gold);
+            font-family: var(--sans);
+            font-size: 11px;
+            letter-spacing: .05em;
+        }
+
+        .record-detail {
+            min-height: 15px;
+            margin: 8px 0 0;
+            color: var(--ink-faint);
+            font-size: 10px;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.5;
+        }
+
+        .footnote {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            margin-top: 17px;
+            color: var(--ink-faint);
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .footnote span:last-child {
+            color: var(--red);
+            text-align: right;
+        }
+
+        @media (max-width: 760px) {
+            .layout {
+                grid-template-columns: 48px minmax(0, 1fr);
             }
 
-            .heading {
-                align-items: center;
+            .workspace {
+                padding: 25px 20px 36px;
             }
 
-            .heading h1 {
-                font-size: 23px;
-            }
-
-            .calculator-content {
+            .calculator-grid {
                 grid-template-columns: 1fr;
-                gap: 20px;
+            }
+
+            .entry-panel {
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .preview-panel {
+                padding-top: 23px;
             }
         }
 
-        @media (max-width: 420px) {
-            .heading {
-                align-items: flex-start;
-                flex-wrap: wrap;
+        @media (max-width: 480px) {
+            .workspace {
+                padding: 19px 14px 28px;
             }
 
-            .theme-toggle {
-                margin-left: auto;
+            .topbar {
+                align-items: flex-start;
+            }
+
+            .breadcrumb {
+                max-width: 190px;
+                line-height: 1.8;
+            }
+
+            .intro {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding-top: 31px;
+            }
+
+            .folio {
+                text-align: left;
+            }
+
+            .folio strong {
+                display: inline;
+                margin-left: 6px;
+                font-size: 17px;
+            }
+
+            .card-heading {
+                padding: 14px 16px;
+            }
+
+            .entry-panel,
+            .preview-panel {
+                padding-right: 16px;
+                padding-left: 16px;
+            }
+
+            .records .record {
+                padding: 16px 14px;
+            }
+
+            .formula {
+                padding: 11px 10px;
+            }
+
+            .formula-expression {
+                font-size: 14px;
+            }
+
+            .footnote {
+                flex-direction: column;
+            }
+
+            .footnote span:last-child {
+                text-align: left;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
             }
         }
     </style>
 </head>
 <body>
-    <main class="calculator">
-        <header class="heading">
-            <h1>Rectangle Calculator</h1>
-            <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">🌙 Dark mode</button>
-        </header>
-        <p class="description">Enter the rectangle's length and width to calculate its area and perimeter.</p>
+    <div class="layout">
+        <aside class="rail" aria-label="Library archive">
+            <div class="seal" aria-hidden="true">L</div>
+            <div class="rail-rule" aria-hidden="true"></div>
+            <span class="rail-mark">THE CITY ARCHIVES</span>
+            <div class="rail-spacer"></div>
+            <span class="rail-volume">GEOMETRY · VOL. 01</span>
+        </aside>
 
-        <div class="calculator-content">
-            <div>
-                <form id="rectangle-form">
-                    <label for="length">Length</label>
-                    <input id="length" type="number" min="0" step="any" placeholder="Enter length" required>
+        <main class="workspace">
+            <header class="topbar">
+                <div class="breadcrumb">THE LIBRARY <span>/</span> REFERENCE DESK</div>
+                <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">☼ &nbsp;LAMPLIGHT</button>
+            </header>
 
-                    <label for="width">Width</label>
-                    <input id="width" type="number" min="0" step="any" placeholder="Enter width" required>
-
-                    <button type="submit">Calculate</button>
-                </form>
-
-                <section class="results" aria-live="polite">
-                    <p>Area formula: <strong>A = length &times; width</strong></p>
-                    <p>Perimeter formula: <strong>P = 2 &times; (length + width)</strong></p>
-                    <p>Area: <strong id="area">—</strong></p>
-                    <p>Perimeter: <strong id="perimeter">—</strong></p>
-                </section>
-                <p id="message" role="alert"></p>
-            </div>
-
-            <section class="visualization" aria-labelledby="visualization-title">
-                <h2 id="visualization-title">Rectangle preview</h2>
-                <p>The drawing updates as you enter dimensions.</p>
-                <svg class="rectangle-diagram" viewBox="0 0 360 220" role="img" aria-labelledby="diagram-title diagram-description">
-                    <title id="diagram-title">Rectangle dimensions</title>
-                    <desc id="diagram-description">A visual representation of the entered rectangle length and width.</desc>
-                    <line class="dimension-line" id="length-line" x1="62" y1="38" x2="298" y2="38"></line>
-                    <text class="dimension-label" id="length-label" x="180" y="28" text-anchor="middle">Length</text>
-                    <rect class="rectangle-shape" id="rectangle-shape" x="62" y="54" width="236" height="126" rx="4"></rect>
-                    <line class="dimension-line" id="width-line" x1="318" y1="54" x2="318" y2="180"></line>
-                    <text class="dimension-label" id="width-label" x="337" y="117" text-anchor="middle" transform="rotate(90 337 117)">Width</text>
-                </svg>
+            <section class="intro" aria-labelledby="page-title">
+                <div>
+                    <p class="eyebrow">A study in measured space</p>
+                    <h1 id="page-title">The Geometry Registry</h1>
+                    <p class="subtitle">Every shape has a story. Enter its dimensions and let the archive keep its measure.</p>
+                </div>
+                <div class="folio">REFERENCE NO.<strong>R—014</strong></div>
             </section>
-        </div>
-    </main>
+
+            <section class="calculator" aria-labelledby="calculator-title">
+                <div class="card-heading">
+                    <p class="section-kicker" id="calculator-title">RECTANGLE · MEASUREMENT RECORD</p>
+                    <span class="access-stamp">Record open</span>
+                </div>
+
+                <div class="calculator-grid">
+                    <section class="entry-panel" aria-labelledby="entry-title">
+                        <h2 class="section-title" id="entry-title">Enter the dimensions</h2>
+                        <p class="section-description">The length and width must be greater than zero. Choose one unit for both measurements.</p>
+
+                        <form id="rectangle-form" novalidate>
+                            <div class="unit-field">
+                                <label class="field-label" for="unit">UNIT OF MEASURE</label>
+                                <select class="unit-select" id="unit" name="unit">
+                                    <option value="mm">Millimeters (mm)</option>
+                                    <option value="cm" selected>Centimeters (cm)</option>
+                                    <option value="m">Meters (m)</option>
+                                    <option value="in">Inches (in)</option>
+                                    <option value="ft">Feet (ft)</option>
+                                </select>
+                            </div>
+
+                            <div class="dimensions-row">
+                                <div>
+                                    <label class="field-label" for="length">LENGTH</label>
+                                    <input class="dimension-input" id="length" name="length" type="number" min="0" step="any" placeholder="e.g. 12" inputmode="decimal" required>
+                                </div>
+                                <div>
+                                    <label class="field-label" for="width">WIDTH</label>
+                                    <input class="dimension-input" id="width" name="width" type="number" min="0" step="any" placeholder="e.g. 8" inputmode="decimal" required>
+                                </div>
+                            </div>
+
+                            <div class="quick-examples" aria-label="Example dimensions">
+                                <span class="example-label">From the stacks</span>
+                                <button class="example-button" type="button" data-length="12" data-width="8">12 × 8</button>
+                                <button class="example-button" type="button" data-length="7.5" data-width="4">7.5 × 4</button>
+                                <button class="example-button" type="button" data-length="10" data-width="10">10 × 10</button>
+                            </div>
+
+                            <div class="actions">
+                                <button class="calculate-button" type="submit">Calculate record &nbsp;→</button>
+                                <button class="clear-button" id="clear-button" type="reset">Clear</button>
+                            </div>
+                            <p class="message" id="message" role="alert" aria-live="polite"></p>
+                        </form>
+                    </section>
+
+                    <section class="preview-panel" aria-labelledby="preview-title">
+                        <div class="preview-heading">
+                            <h2 class="section-title" id="preview-title">Filed specimen</h2>
+                            <span class="preview-note">NOT TO SCALE</span>
+                        </div>
+
+                        <div class="diagram-frame">
+                            <svg class="diagram" viewBox="0 0 420 250" role="img" aria-labelledby="diagram-title diagram-description">
+                                <title id="diagram-title">Rectangle measurement diagram</title>
+                                <desc id="diagram-description">A rectangle with length and width labels. Enter dimensions to update the drawing.</desc>
+                                <line class="dimension-line" id="length-line" x1="72" y1="48" x2="332" y2="48"></line>
+                                <line class="dimension-tick" id="length-tick-left" x1="72" y1="43" x2="72" y2="53"></line>
+                                <line class="dimension-tick" id="length-tick-right" x1="332" y1="43" x2="332" y2="53"></line>
+                                <text class="dimension-label" id="length-label" x="202" y="36" text-anchor="middle">LENGTH</text>
+                                <rect class="rectangle-shape" id="rectangle-shape" x="72" y="70" width="260" height="130"></rect>
+                                <line class="dimension-line" id="width-line" x1="352" y1="70" x2="352" y2="200"></line>
+                                <line class="dimension-tick" id="width-tick-top" x1="347" y1="70" x2="357" y2="70"></line>
+                                <line class="dimension-tick" id="width-tick-bottom" x1="347" y1="200" x2="357" y2="200"></line>
+                                <text class="dimension-label" id="width-label" x="374" y="135" text-anchor="middle" transform="rotate(90 374 135)">WIDTH</text>
+                            </svg>
+                        </div>
+
+                        <div class="formula-strip" aria-label="Rectangle formulas">
+                            <div class="formula">
+                                <span class="formula-name">Surface · Area</span>
+                                <span class="formula-expression">A = L × W</span>
+                            </div>
+                            <div class="formula">
+                                <span class="formula-name">Boundary · Perimeter</span>
+                                <span class="formula-expression">P = 2(L + W)</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="records" aria-label="Calculated results" aria-live="polite">
+                    <div class="record">
+                        <span class="record-label">01 &nbsp; AREA</span>
+                        <output class="record-value" id="area" for="length width">—</output>
+                        <span class="record-unit" id="area-unit">cm²</span>
+                        <p class="record-detail" id="area-detail">Awaiting dimensions</p>
+                    </div>
+                    <div class="record">
+                        <span class="record-label">02 &nbsp; PERIMETER</span>
+                        <output class="record-value" id="perimeter" for="length width">—</output>
+                        <span class="record-unit" id="perimeter-unit">cm</span>
+                        <p class="record-detail" id="perimeter-detail">Awaiting dimensions</p>
+                    </div>
+                </section>
+            </section>
+
+            <footer class="footnote">
+                <span>THE LIBRARY KEEPS WHAT THE CITY FORGETS.</span>
+                <span>All measures are recorded in the selected unit.</span>
+            </footer>
+        </main>
+    </div>
 
     <script>
         const form = document.querySelector("#rectangle-form");
         const lengthInput = document.querySelector("#length");
         const widthInput = document.querySelector("#width");
+        const unitInput = document.querySelector("#unit");
         const areaOutput = document.querySelector("#area");
         const perimeterOutput = document.querySelector("#perimeter");
+        const areaUnit = document.querySelector("#area-unit");
+        const perimeterUnit = document.querySelector("#perimeter-unit");
+        const areaDetail = document.querySelector("#area-detail");
+        const perimeterDetail = document.querySelector("#perimeter-detail");
         const message = document.querySelector("#message");
         const themeToggle = document.querySelector("#theme-toggle");
+        const shape = document.querySelector("#rectangle-shape");
+        const diagramDescription = document.querySelector("#diagram-description");
 
-        themeToggle.addEventListener("click", () => {
-            const isDark = document.body.dataset.theme !== "dark";
-            document.body.dataset.theme = isDark ? "dark" : "light";
-            themeToggle.textContent = isDark ? "☀️ Light mode" : "🌙 Dark mode";
-            themeToggle.setAttribute("aria-pressed", String(isDark));
-        });
+        function formatNumber(value) {
+            return Number(value.toPrecision(8)).toLocaleString(undefined, {
+                maximumSignificantDigits: 8
+            });
+        }
+
+        function clearResults() {
+            areaOutput.textContent = "—";
+            perimeterOutput.textContent = "—";
+            areaUnit.textContent = `${unitInput.value}²`;
+            perimeterUnit.textContent = unitInput.value;
+            areaDetail.textContent = "Awaiting dimensions";
+            perimeterDetail.textContent = "Awaiting dimensions";
+            diagramDescription.textContent = "A rectangle with length and width labels. Enter dimensions to update the drawing.";
+
+            shape.setAttribute("x", "72");
+            shape.setAttribute("y", "70");
+            shape.setAttribute("width", "260");
+            shape.setAttribute("height", "130");
+            setDiagramDimension("length", 72, 332, 48, 48, 202, 36, "LENGTH");
+            setDiagramDimension("width", 70, 200, 352, 352, 374, 135, "WIDTH");
+        }
+
+        function setDiagramDimension(name, start, end, lineStart, lineEnd, labelPosition, labelY, labelText) {
+            const line = document.querySelector(`#${name}-line`);
+            const label = document.querySelector(`#${name}-label`);
+            if (name === "length") {
+                line.setAttribute("x1", start);
+                line.setAttribute("x2", end);
+                line.setAttribute("y1", lineStart);
+                line.setAttribute("y2", lineEnd);
+                document.querySelector("#length-tick-left").setAttribute("x1", start);
+                document.querySelector("#length-tick-left").setAttribute("x2", start);
+                document.querySelector("#length-tick-left").setAttribute("y1", lineStart - 5);
+                document.querySelector("#length-tick-left").setAttribute("y2", lineStart + 5);
+                document.querySelector("#length-tick-right").setAttribute("x1", end);
+                document.querySelector("#length-tick-right").setAttribute("x2", end);
+                document.querySelector("#length-tick-right").setAttribute("y1", lineStart - 5);
+                document.querySelector("#length-tick-right").setAttribute("y2", lineStart + 5);
+                label.setAttribute("x", labelPosition);
+                label.setAttribute("y", labelY);
+            } else {
+                line.setAttribute("x1", lineStart);
+                line.setAttribute("x2", lineEnd);
+                line.setAttribute("y1", start);
+                line.setAttribute("y2", end);
+                document.querySelector("#width-tick-top").setAttribute("x1", lineStart - 5);
+                document.querySelector("#width-tick-top").setAttribute("x2", lineStart + 5);
+                document.querySelector("#width-tick-top").setAttribute("y1", start);
+                document.querySelector("#width-tick-top").setAttribute("y2", start);
+                document.querySelector("#width-tick-bottom").setAttribute("x1", lineStart - 5);
+                document.querySelector("#width-tick-bottom").setAttribute("x2", lineStart + 5);
+                document.querySelector("#width-tick-bottom").setAttribute("y1", end);
+                document.querySelector("#width-tick-bottom").setAttribute("y2", end);
+                label.setAttribute("x", labelPosition);
+                label.setAttribute("y", labelY);
+                label.setAttribute("transform", `rotate(90 ${labelPosition} ${labelY})`);
+            }
+            label.textContent = labelText;
+        }
+
+        function updateDiagram(length, width) {
+            const maxWidth = 260;
+            const maxHeight = 130;
+            const scale = Math.min(maxWidth / length, maxHeight / width);
+            const shapeWidth = length * scale;
+            const shapeHeight = width * scale;
+            const x = (404 - shapeWidth) / 2;
+            const y = 135 - shapeHeight / 2;
+            const right = x + shapeWidth;
+            const bottom = y + shapeHeight;
+            const unit = unitInput.value;
+            const middleX = x + shapeWidth / 2;
+            const middleY = y + shapeHeight / 2;
+            const widthLineX = Math.min(right + 19, 350);
+            const widthLabelX = Math.min(widthLineX + 22, 382);
+
+            shape.setAttribute("x", x);
+            shape.setAttribute("y", y);
+            shape.setAttribute("width", shapeWidth);
+            shape.setAttribute("height", shapeHeight);
+            setDiagramDimension("length", x, right, y - 20, y - 20, middleX, y - 27, `LENGTH · ${formatNumber(length)} ${unit}`);
+            setDiagramDimension("width", y, bottom, widthLineX, widthLineX, widthLabelX, middleY, `WIDTH · ${formatNumber(width)} ${unit}`);
+            diagramDescription.textContent = `A rectangle measuring ${formatNumber(length)} ${unit} long by ${formatNumber(width)} ${unit} wide.`;
+        }
 
         function calculate(showValidation) {
             const length = Number(lengthInput.value);
             const width = Number(widthInput.value);
             const hasBothValues = lengthInput.value !== "" && widthInput.value !== "";
+            const area = length * width;
+            const perimeter = 2 * (length + width);
 
-            if (!hasBothValues || !Number.isFinite(length) || !Number.isFinite(width) || length <= 0 || width <= 0) {
-                areaOutput.textContent = "—";
-                perimeterOutput.textContent = "—";
-                if (showValidation && hasBothValues) {
-                    message.textContent = "Please enter a length and width greater than zero.";
+            if (!hasBothValues || !Number.isFinite(length) || !Number.isFinite(width) || length <= 0 || width <= 0 || !Number.isFinite(area) || !Number.isFinite(perimeter)) {
+                clearResults();
+                if (showValidation) {
+                    message.textContent = hasBothValues
+                        ? "Enter finite length and width values greater than zero."
+                        : "Enter both dimensions to file a measurement record.";
                 } else {
                     message.textContent = "";
                 }
@@ -301,49 +927,14 @@
             }
 
             message.textContent = "";
-            areaOutput.textContent = length * width;
-            perimeterOutput.textContent = 2 * (length + width);
+            const unit = unitInput.value;
+            areaOutput.textContent = formatNumber(area);
+            perimeterOutput.textContent = formatNumber(perimeter);
+            areaUnit.textContent = `${unit}²`;
+            perimeterUnit.textContent = unit;
+            areaDetail.textContent = `${formatNumber(length)} × ${formatNumber(width)} ${unit}`;
+            perimeterDetail.textContent = `2 × (${formatNumber(length)} + ${formatNumber(width)}) ${unit}`;
             updateDiagram(length, width);
-        }
-
-        function updateDiagram(length, width) {
-            const maxShapeWidth = 236;
-            const maxShapeHeight = 126;
-            const scale = Math.min(maxShapeWidth / length, maxShapeHeight / width);
-            const shapeWidth = length * scale;
-            const shapeHeight = width * scale;
-            const x = (360 - shapeWidth) / 2;
-            const y = 117 - shapeHeight / 2;
-            const shape = document.querySelector("#rectangle-shape");
-
-            shape.setAttribute("x", x);
-            shape.setAttribute("y", y);
-            shape.setAttribute("width", shapeWidth);
-            shape.setAttribute("height", shapeHeight);
-
-            const lengthLine = document.querySelector("#length-line");
-            lengthLine.setAttribute("x1", x);
-            lengthLine.setAttribute("x2", x + shapeWidth);
-            lengthLine.setAttribute("y1", y - 16);
-            lengthLine.setAttribute("y2", y - 16);
-
-            const lengthLabel = document.querySelector("#length-label");
-            lengthLabel.setAttribute("x", x + shapeWidth / 2);
-            lengthLabel.setAttribute("y", y - 22);
-            lengthLabel.textContent = `Length: ${length}`;
-
-            const widthLine = document.querySelector("#width-line");
-            widthLine.setAttribute("x1", x + shapeWidth + 16);
-            widthLine.setAttribute("x2", x + shapeWidth + 16);
-            widthLine.setAttribute("y1", y);
-            widthLine.setAttribute("y2", y + shapeHeight);
-
-            const widthLabel = document.querySelector("#width-label");
-            const labelX = Math.min(x + shapeWidth + 34, 350);
-            widthLabel.setAttribute("x", labelX);
-            widthLabel.setAttribute("y", y + shapeHeight / 2);
-            widthLabel.setAttribute("transform", `rotate(90 ${labelX} ${y + shapeHeight / 2})`);
-            widthLabel.textContent = `Width: ${width}`;
         }
 
         form.addEventListener("submit", (event) => {
@@ -352,7 +943,32 @@
         });
 
         form.addEventListener("input", () => calculate(false));
-        console.log("To whoever reading this. I am ashamed of myself for using AI.")
+
+        form.addEventListener("reset", () => {
+            window.setTimeout(() => {
+                message.textContent = "";
+                clearResults();
+            }, 0);
+        });
+
+        unitInput.addEventListener("change", () => calculate(false));
+
+        document.querySelectorAll(".example-button").forEach((button) => {
+            button.addEventListener("click", () => {
+                lengthInput.value = button.dataset.length;
+                widthInput.value = button.dataset.width;
+                calculate(false);
+            });
+        });
+
+        themeToggle.addEventListener("click", () => {
+            const isLight = document.body.dataset.theme !== "light";
+            document.body.dataset.theme = isLight ? "light" : "dark";
+            themeToggle.textContent = isLight ? "☾  NIGHT ARCHIVE" : "☼  LAMPLIGHT";
+            themeToggle.setAttribute("aria-pressed", String(isLight));
+        });
+
+        clearResults();
     </script>
 </body>
 </html>
