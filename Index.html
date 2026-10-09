@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rectangle Calculator</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --page-bg: #f1f3f8;
+            --surface: #ffffff;
+            --panel-bg: #f1f3f8;
+            --text: #202536;
+            --muted: #687084;
+            --border: #cbd0dc;
+        }
+
+        body[data-theme="dark"] {
+            color-scheme: dark;
+            --page-bg: #171a24;
+            --surface: #242837;
+            --panel-bg: #1d2230;
+            --text: #edf0fa;
+            --muted: #a4abc0;
+            --border: #454c60;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: var(--page-bg);
+            color: var(--text);
+            font-family: Arial, sans-serif;
+            transition: background .2s ease, color .2s ease;
+        }
+
+        .calculator {
+            width: min(100%, 760px);
+            padding: 30px;
+            border-radius: 16px;
+            background: var(--surface);
+            box-shadow: 0 12px 36px rgba(32, 37, 54, .1);
+            transition: background .2s ease;
+        }
+
+        .heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .theme-toggle {
+            flex: 0 0 auto;
+            width: auto;
+            margin: 0;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            background: var(--panel-bg);
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border);
+        }
+
+        .calculator-content {
+            display: grid;
+            grid-template-columns: minmax(220px, .9fr) minmax(260px, 1.1fr);
+            gap: 28px;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 26px;
+        }
+
+        .description {
+            margin: 0 0 24px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin: 16px 0 7px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        input:focus {
+            border-color: #5969d9;
+            outline: 3px solid rgba(89, 105, 217, .15);
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 13px;
+            border: 0;
+            border-radius: 8px;
+            background: #5969d9;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        button:hover {
+            background: #4656c3;
+        }
+
+        .results {
+            margin-top: 22px;
+            padding: 16px;
+            border-radius: 8px;
+            background: var(--panel-bg);
+        }
+
+        .results p {
+            margin: 6px 0;
+        }
+
+        .visualization {
+            min-width: 0;
+            padding: 20px 16px 14px;
+            border-radius: 12px;
+            background: var(--panel-bg);
+            text-align: center;
+        }
+
+        .visualization h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .visualization p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .rectangle-diagram {
+            display: block;
+            width: 100%;
+            max-width: 360px;
+            height: auto;
+            margin: 10px auto 0;
+        }
+
+        .rectangle-shape {
+            fill: #dfe3ff;
+            stroke: #5969d9;
+            stroke-width: 3;
+            transition: all .2s ease;
+        }
+
+        .dimension-line {
+            stroke: #687084;
+            stroke-width: 1.5;
+        }
+
+        .dimension-label {
+            fill: var(--text);
+            font: 14px Arial, sans-serif;
+            font-weight: 700;
+        }
+
+        #message {
+            min-height: 18px;
+            margin: 12px 0 0;
+            color: #b42318;
+            font-size: 14px;
+        }
+
+        @media (max-width: 620px) {
+            .calculator {
+                padding: 24px;
+            }
+
+            .heading {
+                align-items: center;
+            }
+
+            .heading h1 {
+                font-size: 23px;
+            }
+
+            .calculator-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .heading {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .theme-toggle {
+                margin-left: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="calculator">
+        <header class="heading">
+            <h1>Rectangle Calculator</h1>
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">🌙 Dark mode</button>
+        </header>
+        <p class="description">Enter the rectangle's length and width to calculate its area and perimeter.</p>
+
+        <div class="calculator-content">
+            <div>
+                <form id="rectangle-form">
+                    <label for="length">Length</label>
+                    <input id="length" type="number" min="0" step="any" placeholder="Enter length" required>
+
+                    <label for="width">Width</label>
+                    <input id="width" type="number" min="0" step="any" placeholder="Enter width" required>
+
+                    <button type="submit">Calculate</button>
+                </form>
+
+                <section class="results" aria-live="polite">
+                    <p>Area formula: <strong>A = length &times; width</strong></p>
+                    <p>Perimeter formula: <strong>P = 2 &times; (length + width)</strong></p>
+                    <p>Area: <strong id="area">—</strong></p>
+                    <p>Perimeter: <strong id="perimeter">—</strong></p>
+                </section>
+                <p id="message" role="alert"></p>
+            </div>
+
+            <section class="visualization" aria-labelledby="visualization-title">
+                <h2 id="visualization-title">Rectangle preview</h2>
+                <p>The drawing updates as you enter dimensions.</p>
+                <svg class="rectangle-diagram" viewBox="0 0 360 220" role="img" aria-labelledby="diagram-title diagram-description">
+                    <title id="diagram-title">Rectangle dimensions</title>
+                    <desc id="diagram-description">A visual representation of the entered rectangle length and width.</desc>
+                    <line class="dimension-line" id="length-line" x1="62" y1="38" x2="298" y2="38"></line>
+                    <text class="dimension-label" id="length-label" x="180" y="28" text-anchor="middle">Length</text>
+                    <rect class="rectangle-shape" id="rectangle-shape" x="62" y="54" width="236" height="126" rx="4"></rect>
+                    <line class="dimension-line" id="width-line" x1="318" y1="54" x2="318" y2="180"></line>
+                    <text class="dimension-label" id="width-label" x="337" y="117" text-anchor="middle" transform="rotate(90 337 117)">Width</text>
+                </svg>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const form = document.querySelector("#rectangle-form");
+        const lengthInput = document.querySelector("#length");
+        const widthInput = document.querySelector("#width");
+        const areaOutput = document.querySelector("#area");
+        const perimeterOutput = document.querySelector("#perimeter");
+        const message = document.querySelector("#message");
+        const themeToggle = document.querySelector("#theme-toggle");
+
+        themeToggle.addEventListener("click", () => {
+            const isDark = document.body.dataset.theme !== "dark";
+            document.body.dataset.theme = isDark ? "dark" : "light";
+            themeToggle.textContent = isDark ? "☀️ Light mode" : "🌙 Dark mode";
+            themeToggle.setAttribute("aria-pressed", String(isDark));
+        });
+
+        function calculate(showValidation) {
+            const length = Number(lengthInput.value);
+            const width = Number(widthInput.value);
+            const hasBothValues = lengthInput.value !== "" && widthInput.value !== "";
+
+            if (!hasBothValues || !Number.isFinite(length) || !Number.isFinite(width) || length <= 0 || width <= 0) {
+                areaOutput.textContent = "—";
+                perimeterOutput.textContent = "—";
+                if (showValidation && hasBothValues) {
+                    message.textContent = "Please enter a length and width greater than zero.";
+                } else {
+                    message.textContent = "";
+                }
+                return;
+            }
+
+            message.textContent = "";
+            areaOutput.textContent = length * width;
+            perimeterOutput.textContent = 2 * (length + width);
+            updateDiagram(length, width);
+        }
+
+        function updateDiagram(length, width) {
+            const maxShapeWidth = 236;
+            const maxShapeHeight = 126;
+            const scale = Math.min(maxShapeWidth / length, maxShapeHeight / width);
+            const shapeWidth = length * scale;
+            const shapeHeight = width * scale;
+            const x = (360 - shapeWidth) / 2;
+            const y = 117 - shapeHeight / 2;
+            const shape = document.querySelector("#rectangle-shape");
+
+            shape.setAttribute("x", x);
+            shape.setAttribute("y", y);
+            shape.setAttribute("width", shapeWidth);
+            shape.setAttribute("height", shapeHeight);
+
+            const lengthLine = document.querySelector("#length-line");
+            lengthLine.setAttribute("x1", x);
+            lengthLine.setAttribute("x2", x + shapeWidth);
+            lengthLine.setAttribute("y1", y - 16);
+            lengthLine.setAttribute("y2", y - 16);
+
+            const lengthLabel = document.querySelector("#length-label");
+            lengthLabel.setAttribute("x", x + shapeWidth / 2);
+            lengthLabel.setAttribute("y", y - 22);
+            lengthLabel.textContent = `Length: ${length}`;
+
+            const widthLine = document.querySelector("#width-line");
+            widthLine.setAttribute("x1", x + shapeWidth + 16);
+            widthLine.setAttribute("x2", x + shapeWidth + 16);
+            widthLine.setAttribute("y1", y);
+            widthLine.setAttribute("y2", y + shapeHeight);
+
+            const widthLabel = document.querySelector("#width-label");
+            const labelX = Math.min(x + shapeWidth + 34, 350);
+            widthLabel.setAttribute("x", labelX);
+            widthLabel.setAttribute("y", y + shapeHeight / 2);
+            widthLabel.setAttribute("transform", `rotate(90 ${labelX} ${y + shapeHeight / 2})`);
+            widthLabel.textContent = `Width: ${width}`;
+        }
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            calculate(true);
+        });
+
+        form.addEventListener("input", () => calculate(false));
+        console.log("To whoever reading this. I am ashamed of myself for using AI.")
+    </script>
+</body>
+</html>
