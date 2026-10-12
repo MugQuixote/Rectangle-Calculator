@@ -20,8 +20,16 @@
             --gold: #d7bd79;
             --gold-bright: #ecd69a;
             --gold-wash: rgba(215, 189, 121, .1);
+            --teal: #68cbbb;
+            --teal-bright: #8de4d5;
             --red: #bf6c60;
             --green: #a7b89a;
+            --backdrop-overlay: rgba(8, 10, 10, .76);
+            --scene-overlay: rgba(17, 19, 17, .88);
+            --scene-overlay-mid: rgba(17, 19, 17, .68);
+            --scene-overlay-end: rgba(17, 19, 17, .12);
+            --rail-overlay: rgba(11, 14, 13, .96);
+            --rail-overlay-soft: rgba(13, 15, 14, .88);
             --serif: "Palatino Linotype", "Book Antiqua", Georgia, serif;
             --sans: "Segoe UI", Arial, sans-serif;
         }
@@ -40,8 +48,16 @@
             --gold: #876d37;
             --gold-bright: #6e5727;
             --gold-wash: rgba(135, 109, 55, .1);
+            --teal: #357f73;
+            --teal-bright: #28695f;
             --red: #9b4e44;
             --green: #536b48;
+            --backdrop-overlay: rgba(233, 229, 218, .86);
+            --scene-overlay: rgba(245, 241, 231, .9);
+            --scene-overlay-mid: rgba(245, 241, 231, .76);
+            --scene-overlay-end: rgba(245, 241, 231, .32);
+            --rail-overlay: rgba(233, 229, 218, .96);
+            --rail-overlay-soft: rgba(233, 229, 218, .88);
         }
 
         * {
@@ -49,6 +65,8 @@
         }
 
         body {
+            position: relative;
+            isolation: isolate;
             min-width: 320px;
             min-height: 100vh;
             margin: 0;
@@ -58,6 +76,17 @@
             color: var(--ink);
             font-family: var(--sans);
             transition: background-color .2s ease, color .2s ease;
+        }
+
+        body::before {
+            position: fixed;
+            z-index: -1;
+            inset: 0;
+            background:
+                linear-gradient(var(--backdrop-overlay), var(--backdrop-overlay)),
+                url("./UI/Main%20Menu/UIRearBg.png") 55% 48% / cover no-repeat;
+            content: "";
+            pointer-events: none;
         }
 
         button,
@@ -75,44 +104,96 @@
 
         .layout {
             display: grid;
-            grid-template-columns: 74px minmax(0, 1fr);
+            grid-template-columns: 222px minmax(0, 1fr);
             min-height: 100vh;
         }
 
         .rail {
+            position: relative;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 27px;
-            padding: 24px 0;
+            gap: 32px;
+            min-height: 100vh;
+            padding: 34px 22px 24px;
             border-right: 1px solid var(--line);
-            background: var(--panel-soft);
+            background:
+                linear-gradient(180deg, var(--rail-overlay), var(--rail-overlay-soft)),
+                url("./UI/Main%20Menu/UISideBlackBg.png") 16% center / auto 100% no-repeat,
+                var(--panel-soft);
+            box-shadow: 12px 0 42px rgba(0, 0, 0, .2);
         }
 
-        .seal {
+        .rail-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rail-logo {
+            display: block;
+            width: min(100%, 178px);
+            height: auto;
+            object-fit: contain;
+            object-position: left center;
+            filter: drop-shadow(0 2px 8px rgba(104, 203, 187, .22));
+        }
+
+        .rail-brand-subtitle {
+            margin: 0;
+            color: var(--ink-faint);
+            font-size: 9px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        .rail-menu-label {
+            margin: 0 0 -19px;
+            color: var(--ink-faint);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        .rail-nav {
             display: grid;
-            width: 38px;
-            height: 38px;
-            place-items: center;
-            border: 1px solid var(--gold);
+            gap: 7px;
+        }
+
+        .rail-link {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-height: 45px;
+            padding: 0 12px;
+            border: 1px solid transparent;
+            color: var(--ink-muted);
+            font-size: 11px;
+            font-weight: 650;
+            letter-spacing: .07em;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: background .2s ease, border-color .2s ease, color .2s ease;
+        }
+
+        .rail-link:hover,
+        .rail-link:focus-visible {
+            border-color: var(--line-bright);
+            background: rgba(215, 189, 121, .07);
+            color: var(--gold-bright);
+        }
+
+        .rail-link[aria-current="location"] {
+            border-color: rgba(215, 189, 121, .32);
+            background: linear-gradient(90deg, var(--gold-wash), transparent);
+            color: var(--gold-bright);
+        }
+
+        .rail-link-number {
             color: var(--gold);
             font-family: var(--serif);
-            font-size: 24px;
-            line-height: 1;
-        }
-
-        .rail-rule {
-            width: 20px;
-            height: 1px;
-            background: var(--line-bright);
-        }
-
-        .rail-mark {
-            color: var(--ink-faint);
-            font-family: var(--serif);
-            font-size: 12px;
-            letter-spacing: .16em;
-            writing-mode: vertical-rl;
+            font-size: 15px;
+            font-weight: 400;
         }
 
         .rail-spacer {
@@ -120,16 +201,19 @@
         }
 
         .rail-volume {
-            color: var(--gold);
-            font-size: 10px;
-            letter-spacing: .15em;
-            writing-mode: vertical-rl;
+            padding-top: 15px;
+            border-top: 1px solid var(--line);
+            color: var(--ink-faint);
+            font-size: 9px;
+            letter-spacing: .12em;
+            line-height: 1.8;
+            text-transform: uppercase;
         }
 
         .workspace {
-            width: min(100%, 1160px);
+            width: min(100%, 1380px);
             margin: 0 auto;
-            padding: 34px clamp(22px, 6vw, 78px) 48px;
+            padding: 30px clamp(24px, 5vw, 76px) 42px;
         }
 
         .topbar {
@@ -178,16 +262,32 @@
         }
 
         .intro {
+            position: relative;
+            isolation: isolate;
             display: grid;
             grid-template-columns: minmax(0, 1fr) auto;
             align-items: end;
             gap: 24px;
-            padding: 42px 0 27px;
+            min-height: 246px;
+            padding: 48px 28px 34px;
+        }
+
+        .intro::before {
+            position: absolute;
+            z-index: -1;
+            inset: 14px 0 14px;
+            border: 1px solid var(--line);
+            background:
+                linear-gradient(90deg, var(--scene-overlay) 0%, var(--scene-overlay-mid) 38%, var(--scene-overlay-end) 100%),
+                url("./UI/Main%20Menu/TitleBackground.png") 76% 46% / 132% auto no-repeat;
+            content: "";
+            opacity: .9;
+            pointer-events: none;
         }
 
         .eyebrow {
             margin: 0 0 12px;
-            color: var(--gold);
+            color: var(--teal-bright);
         }
 
         h1,
@@ -223,7 +323,7 @@
         .folio strong {
             display: block;
             margin-top: 7px;
-            color: var(--gold);
+            color: var(--gold-bright);
             font-family: var(--serif);
             font-size: 24px;
             font-weight: 400;
@@ -231,10 +331,24 @@
         }
 
         .calculator {
+            position: relative;
             overflow: hidden;
             border: 1px solid var(--line-bright);
-            background: var(--panel);
-            box-shadow: 0 20px 70px rgba(0, 0, 0, .17);
+            background: linear-gradient(145deg, rgba(27, 30, 27, .97), rgba(17, 19, 17, .97));
+            box-shadow: 0 24px 80px rgba(0, 0, 0, .3), inset 0 1px rgba(236, 214, 154, .05);
+        }
+
+        .calculator::before {
+            position: absolute;
+            z-index: 1;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), var(--teal), var(--gold), transparent);
+            content: "";
+            opacity: .85;
+            pointer-events: none;
         }
 
         .card-heading {
@@ -244,19 +358,19 @@
             gap: 18px;
             padding: 17px 24px;
             border-bottom: 1px solid var(--line);
-            background: var(--panel-soft);
+            background: linear-gradient(90deg, rgba(27, 30, 27, .98), rgba(19, 21, 19, .94));
         }
 
         .section-kicker {
             margin: 0;
-            color: var(--ink-muted);
+            color: var(--gold-bright);
         }
 
         .access-stamp {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: var(--green);
+            color: var(--teal-bright);
             font-size: 10px;
             letter-spacing: .12em;
             text-transform: uppercase;
@@ -266,7 +380,8 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: var(--green);
+            background: var(--teal);
+            box-shadow: 0 0 10px var(--teal);
             content: "";
         }
 
@@ -285,6 +400,7 @@
             font-family: var(--serif);
             font-size: 22px;
             font-weight: 400;
+            scroll-margin-top: 20px;
         }
 
         .section-description {
@@ -446,12 +562,14 @@
             min-height: 215px;
             place-items: center;
             margin: 15px 0 18px;
-            border: 1px solid var(--line);
+            border: 1px solid var(--line-bright);
             background:
-                linear-gradient(rgba(160, 150, 122, .045) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(160, 150, 122, .045) 1px, transparent 1px),
-                var(--panel-soft);
-            background-size: 22px 22px;
+                radial-gradient(ellipse at 50% 50%, rgba(215, 189, 121, .075), transparent 65%),
+                linear-gradient(rgba(160, 150, 122, .055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(160, 150, 122, .055) 1px, transparent 1px),
+                #141715;
+            background-size: auto, 24px 24px, 24px 24px, auto;
+            box-shadow: inset 0 0 24px rgba(0, 0, 0, .28);
         }
 
         .diagram {
@@ -520,12 +638,24 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             border-top: 1px solid var(--line-bright);
-            background: var(--panel-soft);
+            background: linear-gradient(110deg, rgba(24, 27, 24, .98), rgba(17, 19, 17, .98));
         }
 
         .record {
+            position: relative;
             min-width: 0;
             padding: 19px 24px 21px;
+        }
+
+        .record::before {
+            position: absolute;
+            top: 0;
+            left: 24px;
+            width: 34px;
+            height: 2px;
+            background: var(--gold);
+            content: "";
+            opacity: .75;
         }
 
         .record + .record {
@@ -579,13 +709,13 @@
             text-align: right;
         }
 
-        @media (max-width: 760px) {
+        @media (max-width: 960px) {
             .layout {
-                grid-template-columns: 48px minmax(0, 1fr);
+                grid-template-columns: 190px minmax(0, 1fr);
             }
 
             .workspace {
-                padding: 25px 20px 36px;
+                padding: 24px 24px 34px;
             }
 
             .calculator-grid {
@@ -600,11 +730,83 @@
             .preview-panel {
                 padding-top: 23px;
             }
+
+            .intro {
+                min-height: 220px;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .rail {
+                position: relative;
+                z-index: 2;
+                min-height: 0;
+                gap: 16px;
+                padding: 14px 18px;
+                border-right: 0;
+                border-bottom: 1px solid var(--line-bright);
+                background: rgba(10, 12, 11, .97);
+            }
+
+            .rail-brand {
+                align-self: flex-start;
+            }
+
+            .rail-menu-label,
+            .rail-spacer,
+            .rail-volume {
+                display: none;
+            }
+
+            .rail-nav {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 5px;
+            }
+
+            .rail-link {
+                justify-content: center;
+                gap: 6px;
+                min-height: 38px;
+                padding: 0 5px;
+                font-size: 9px;
+                letter-spacing: .04em;
+            }
+
+            .rail-link-number {
+                font-size: 12px;
+            }
+
+            .workspace {
+                padding: 20px 20px 30px;
+            }
+
+            .intro::before {
+                background:
+                    linear-gradient(90deg, var(--scene-overlay), var(--scene-overlay-mid)),
+                    url("./UI/Main%20Menu/TitleBackground.png") 72% center / cover no-repeat;
+            }
         }
 
         @media (max-width: 480px) {
             .workspace {
                 padding: 19px 14px 28px;
+            }
+
+            .rail {
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .rail-brand-subtitle {
+                font-size: 8px;
+            }
+
+            .rail-nav {
+                grid-template-columns: repeat(3, 1fr);
             }
 
             .topbar {
@@ -619,11 +821,17 @@
             .intro {
                 grid-template-columns: 1fr;
                 gap: 12px;
-                padding-top: 31px;
+                min-height: 235px;
+                padding: 31px 18px 24px;
             }
 
             .folio {
                 text-align: left;
+            }
+
+            .intro::before {
+                inset: 8px 0;
+                background-position: center, 70% center;
             }
 
             .folio strong {
@@ -676,11 +884,33 @@
 <body>
     <div class="layout">
         <aside class="rail" aria-label="Library archive">
-            <div class="seal" aria-hidden="true">L</div>
-            <div class="rail-rule" aria-hidden="true"></div>
-            <span class="rail-mark">THE CITY ARCHIVES</span>
+            <div class="rail-brand">
+                <div>
+                    <img class="rail-logo" src="./UI/Main%20Menu/TitleLogoText.png" alt="Library of Ruina">
+                    <p class="rail-brand-subtitle">Geometry Registry</p>
+                </div>
+            </div>
+            <p class="rail-menu-label">Registry menu</p>
+            <nav class="rail-nav" aria-label="Registry sections">
+                <a class="rail-link" href="#page-title">
+                    <span class="rail-link-number">01</span>
+                    <span>Overview</span>
+                </a>
+                <a class="rail-link" href="#entry-title" aria-current="location">
+                    <span class="rail-link-number">02</span>
+                    <span>Measure</span>
+                </a>
+                <a class="rail-link" href="#preview-title">
+                    <span class="rail-link-number">03</span>
+                    <span>Specimen</span>
+                </a>
+                <a class="rail-link" href="#results">
+                    <span class="rail-link-number">04</span>
+                    <span>Records</span>
+                </a>
+            </nav>
             <div class="rail-spacer"></div>
-            <span class="rail-volume">GEOMETRY · VOL. 01</span>
+            <span class="rail-volume">Archive volume 01<br>Reference desk · R—014</span>
         </aside>
 
         <main class="workspace">
@@ -782,7 +1012,7 @@
                     </section>
                 </div>
 
-                <section class="records" aria-label="Calculated results" aria-live="polite">
+                <section class="records" id="results" aria-label="Calculated results" aria-live="polite">
                     <div class="record">
                         <span class="record-label">01 &nbsp; AREA</span>
                         <output class="record-value" id="area" for="length width">—</output>
